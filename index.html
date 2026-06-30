@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HA Coaching — Calculateur de Vitesse Critique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,800;0,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --noir:#000; --blanc:#fff; --gris:#9A9A9A; --gris-clair:#f4f4f4;
+    --gris-bord:#e2e2e2; --rouge:#E10600;
+    --endurant:#1f7a3d; --mixte:#b8860b; --sprinteur:#E10600;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--noir);background:#eaeaea;line-height:1.45;padding:24px}
+  .wrap{max-width:980px;margin:0 auto;background:var(--blanc);box-shadow:0 8px 40px rgba(0,0,0,.12)}
+  /* HEADER */
+  header{background:var(--noir);color:var(--blanc);padding:30px 36px}
+  header h1{font-family:'Archivo';font-weight:900;font-stretch:expanded;text-transform:uppercase;
+    letter-spacing:.06em;font-size:clamp(20px,3.4vw,30px);line-height:1.05}
+  header h1 .accent{color:var(--rouge)}
+  header p{color:var(--gris);font-size:13px;margin-top:8px;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
+  /* SECTIONS */
+  section{padding:26px 36px;border-bottom:1px solid var(--gris-bord)}
+  .sec-title{font-family:'Archivo';font-weight:800;text-transform:uppercase;letter-spacing:.08em;
+    font-size:13px;color:var(--noir);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  .sec-title .num{background:var(--noir);color:#fff;width:24px;height:24px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 auto}
+  /* GRID INPUTS */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px}
+  .field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;
+    letter-spacing:.05em;color:var(--gris);margin-bottom:6px}
+  .field input,.field select{width:100%;padding:11px 13px;border:1.5px solid var(--gris-bord);
+    border-radius:8px;font-family:'Inter';font-size:16px;font-weight:600;background:#fafafa;transition:.15s}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--noir);background:#fff}
+  .field .hint{font-size:10.5px;color:var(--gris);margin-top:5px;font-style:italic}
+  .toggle{display:flex;gap:0;border:1.5px solid var(--noir);border-radius:9px;overflow:hidden;width:fit-content}
+  .toggle button{font-family:'Archivo';font-weight:700;font-size:13px;padding:11px 22px;border:0;
+    background:#fff;cursor:pointer;letter-spacing:.03em;transition:.15s}
+  .toggle button.active{background:var(--noir);color:#fff}
+  /* RESULTS */
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .card{border:1.5px solid var(--gris-bord);border-radius:10px;padding:16px 18px;background:#fff}
+  .card .k{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--gris)}
+  .card .v{font-family:'Archivo';font-weight:900;font-size:30px;line-height:1.1;margin-top:6px}
+  .card .u{font-size:12px;color:var(--gris);font-weight:600}
+  .card.hero{background:var(--noir);border-color:var(--noir)}
+  .card.hero .k{color:var(--gris)} .card.hero .v{color:#fff} .card.hero .v .u{color:var(--rouge)}
+  .card .v.red{color:var(--rouge)}
+  .badge{display:inline-block;font-family:'Archivo';font-weight:800;text-transform:uppercase;
+    letter-spacing:.05em;font-size:18px;padding:6px 14px;border-radius:7px;color:#fff;margin-top:4px}
+  .badge.endurant{background:var(--endurant)} .badge.mixte{background:var(--mixte)} .badge.sprinteur{background:var(--sprinteur)}
+  /* PROFIL BAR */
+  .profbar{margin-top:16px}
+  .profbar .track{position:relative;height:12px;border-radius:6px;
+    background:linear-gradient(90deg,var(--endurant) 0%,var(--endurant) 33%,var(--mixte) 33%,var(--mixte) 66%,var(--sprinteur) 66%,var(--sprinteur) 100%)}
+  .profbar .marker{position:absolute;top:-5px;width:3px;height:22px;background:#000;border:1px solid #fff;border-radius:2px;transition:left .25s}
+  .profbar .scale{display:flex;justify-content:space-between;font-size:10px;color:var(--gris);margin-top:6px;font-weight:600}
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 8px;text-align:center;border:1px solid var(--gris-bord)}
+  th{background:var(--noir);color:#fff;font-family:'Archivo';font-weight:700;font-size:10.5px;
+    text-transform:uppercase;letter-spacing:.03em}
+  td.dom{font-weight:700;font-size:11px;text-align:left}
+  td.zone{text-align:left;font-weight:600}
+  td.pace,td.fc{font-family:'Archivo';font-weight:700;font-size:14px}
+  tr.basse td.dom{background:var(--gris-clair)}
+  tr.moder td.dom{background:#fce4e4}
+  tr.haute td.dom{background:#f8c9c7}
+  .muted{color:var(--gris)}
+  /* NOTES */
+  .notes{font-size:12px;color:#333}
+  .notes li{margin:7px 0;list-style:none;padding-left:18px;position:relative}
+  .notes li:before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--rouge);border-radius:50%}
+  .notes b{font-weight:700}
+  footer{padding:18px 36px;background:var(--gris-clair);font-size:11px;color:var(--gris);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .btn{font-family:'Archivo';font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;
+    padding:9px 18px;border:1.5px solid var(--noir);background:#fff;border-radius:8px;cursor:pointer}
+  .btn:hover{background:var(--noir);color:#fff}
+  @media print{body{background:#fff;padding:0}.wrap{box-shadow:none}.no-print{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>HA <span class="accent">Coaching</span> — Calculateur de Vitesse Critique</h1>
+    <p>HYROX & Fitness Racing · Course à pied · Zones d'intensité personnalisées</p>
+  </header>
+
+  <!-- 1. SAISIE -->
+  <section>
+    <div class="sec-title"><span class="num">1</span>Protocole & données du test</div>
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--gris);margin-bottom:8px">Protocole</label>
+      <div class="toggle" id="proto">
+        <button data-t1="180" data-t2="720" data-l1="3 min" data-l2="12 min">Test 3' / 12'</button>
+        <button class="active" data-t1="300" data-t2="1200" data-l1="5 min" data-l2="20 min">Test 5' / 20'</button>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label>Vitesse effort court (km/h)</label>
+        <input type="number" id="v1" step="0.1" value="15.9">
+        <div class="hint" id="h1">vitesse moy. sur l'effort de 5 min</div>
+      </div>
+      <div class="field">
+        <label>Vitesse effort long (km/h)</label>
+        <input type="number" id="v2" step="0.1" value="13.5">
+        <div class="hint" id="h2">vitesse moy. sur l'effort de 20 min</div>
+      </div>
+      <div class="field">
+        <label>FCmax atteinte (bpm)</label>
+        <input type="number" id="fc" step="1" value="194">
+        <div class="hint">FC max relevée pendant un test</div>
+      </div>
+      <div class="field">
+        <label>Athlète</label>
+        <input type="text" id="nom" placeholder="Prénom NOM">
+        <div class="hint">optionnel</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. RESULTATS -->
+  <section>
+    <div class="sec-title"><span class="num">2</span>Résultats</div>
+    <div class="results">
+      <div class="card hero">
+        <div class="k">Vitesse Critique</div>
+        <div class="v"><span id="r_vc">–</span> <span class="u">km/h</span></div>
+      </div>
+      <div class="card">
+        <div class="k">Allure critique</div>
+        <div class="v"><span id="r_pace">–</span> <span class="u">min/km</span></div>
+      </div>
+      <div class="card">
+        <div class="k">D′ · réserve anaérobie</div>
+        <div class="v red"><span id="r_dp">–</span> <span class="u">m</span></div>
+      </div>
+      <div class="card">
+        <div class="k">Réserve de vitesse</div>
+        <div class="v"><span id="r_res">–</span> <span class="u">%</span></div>
+      </div>
+    </div>
+    <div class="profbar">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--gris)">Profil de l'athlète</span>
+        <span class="badge" id="r_badge">–</span>
+      </div>
+      <div class="track"><div class="marker" id="marker" style="left:0%"></div></div>
+      <div class="scale"><span>ENDURANT · D′&lt;150 m</span><span>MIXTE · 150–300 m</span><span>SPRINTEUR · &gt;300 m</span></div>
+    </div>
+  </section>
+
+  <!-- 3. ZONES -->
+  <section>
+    <div class="sec-title"><span class="num">3</span>Zones d'intensité personnalisées</div>
+    <table>
+      <thead><tr>
+        <th>Domaine</th><th>Zone</th><th>% VC</th><th>Allure (min/km)</th><th>% FCmax</th><th>FC (bpm)</th>
+      </tr></thead>
+      <tbody id="zones"></tbody>
+    </table>
+  </section>
+
+  <!-- NOTES -->
+  <section>
+    <div class="sec-title">Repères — interprétation</div>
+    <ul class="notes">
+      <li><b>Vitesse Critique (VC)</b> : vitesse maximale soutenable en état métabolique stable — ton « seuil » de référence. Pente du modèle distance-temps <i>D = VC·T + D′</i>.</li>
+      <li><b>D′ (réserve anaérobie, en mètres)</b> : distance parcourable au-dessus de la VC, ta « batterie » anaérobie. &nbsp;<b>&lt;150 m</b> → endurant · <b>150–300 m</b> → mixte · <b>&gt;300 m</b> → sprinteur (réf. coureurs entraînés : 150–450 m).</li>
+      <li><b>Réserve de vitesse</b> : écart entre la vitesse de l'effort court et la VC. Plus elle est grande, plus le profil est explosif.</li>
+      <li><b>Protocole</b> : effort court 3–8 min + effort long 12–30 min, réalisés frais, à 2–4 semaines d'intervalle, sur la même période d'entraînement.</li>
+      <li><b>FC en Zone 6</b> : non pertinente — effort trop court/explosif pour un pilotage cardiaque fiable.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span id="foot">HA Coaching — méthode Vitesse Critique</span>
+    <button class="btn no-print" onclick="window.print()">Imprimer / PDF</button>
+  </footer>
+</div>
+
+<script>
+const ZONES=[
+  {dom:"Basse intensité",cls:"basse",zone:"Z1 · Récup / Endurance",vc:[.55,.72],fc:[.55,.70]},
+  {dom:"Basse intensité",cls:"basse",zone:"Z2 · Endurance fond.",vc:[.73,.85],fc:[.71,.80]},
+  {dom:"Intensité modérée",cls:"moder",zone:"Z3 · Tempo",vc:[.86,.95],fc:[.81,.88]},
+  {dom:"Intensité modérée",cls:"moder",zone:"Z4 · Seuil / VC",vc:[.95,1.00],fc:[.89,.92]},
+  {dom:"Haute intensité",cls:"haute",zone:"Z5 · VO2max",vc:[1.01,1.17],fc:[.93,1.00]},
+  {dom:"Haute intensité",cls:"haute",zone:"Z6 · Anaérobie / Vitesse",vc:[1.18,1.50],fc:null},
+];
+const $=id=>document.getElementById(id);
+let T1=300,T2=1200;
+
+function pace(speed){ // km/h -> "m:ss" per km
+  if(!isFinite(speed)||speed<=0) return "–";
+  const s=3600/speed; const m=Math.floor(s/60), sec=Math.round(s%60);
+  return (sec===60)?`${m+1}:00`:`${m}:${String(sec).padStart(2,'0')}`;
+}
+function compute(){
+  const v1=parseFloat($('v1').value), v2=parseFloat($('v2').value), fc=parseFloat($('fc').value);
+  if(!(v1>0)||!(v2>0)||!(v1!==v2)){clear();return;}
+  const ms1=v1/3.6, ms2=v2/3.6;
+  const d1=ms1*T1, d2=ms2*T2;
+  const vc_ms=(d2-d1)/(T2-T1); const vc=vc_ms*3.6;
+  const dp=d1-vc_ms*T1;
+  if(!(vc>0)){clear();return;}
+  const res=(v1-vc)/vc*100;
+  $('r_vc').textContent=vc.toFixed(2);
+  $('r_pace').textContent=pace(vc);
+  $('r_dp').textContent=Math.round(dp);
+  $('r_res').textContent=res.toFixed(1);
+  // profil
+  let prof,cls,pos;
+  if(dp<150){prof="Endurant";cls="endurant";pos=Math.max(2,(dp/150)*33);}
+  else if(dp<=300){prof="Mixte";cls="mixte";pos=33+((dp-150)/150)*33;}
+  else{prof="Sprinteur";cls="sprinteur";pos=Math.min(98,66+((dp-300)/200)*34);}
+  const b=$('r_badge'); b.textContent=prof; b.className="badge "+cls;
+  $('marker').style.left=pos+"%";
+  // zones
+  const tb=$('zones'); tb.innerHTML="";
+  ZONES.forEach(z=>{
+    const aLo=pace(vc*z.vc[0]), aHi=pace(vc*z.vc[1]);
+    let fcCell="<span class='muted'>non pertinent</span>", fcPct="<span class='muted'>—</span>";
+    if(z.fc){fcCell=`${Math.round(fc*z.fc[0])} – ${Math.round(fc*z.fc[1])}`;
+             fcPct=`${Math.round(z.fc[0]*100)}–${Math.round(z.fc[1]*100)}%`;}
+    tb.insertAdjacentHTML('beforeend',
+      `<tr class="${z.cls}"><td class="dom">${z.dom}</td><td class="zone">${z.zone}</td>
+       <td>${Math.round(z.vc[0]*100)}–${Math.round(z.vc[1]*100)}%</td>
+       <td class="pace">${aLo} → ${aHi}</td><td>${fcPct}</td><td class="fc">${fcCell}</td></tr>`);
+  });
+  const nom=$('nom').value.trim();
+  $('foot').textContent=(nom?nom+" — ":"")+"HA Coaching · VC "+vc.toFixed(2)+" km/h · D′ "+Math.round(dp)+" m · "+prof;
+}
+function clear(){
+  ['r_vc','r_pace','r_dp','r_res'].forEach(i=>$(i).textContent='–');
+  $('r_badge').textContent='–';$('r_badge').className='badge';$('zones').innerHTML='';
+}
+// protocole toggle
+$('proto').addEventListener('click',e=>{
+  const btn=e.target.closest('button'); if(!btn)return;
+  [...$('proto').children].forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  T1=+btn.dataset.t1; T2=+btn.dataset.t2;
+  $('h1').textContent="vitesse moy. sur l'effort de "+btn.dataset.l1;
+  $('h2').textContent="vitesse moy. sur l'effort de "+btn.dataset.l2;
+  compute();
+});
+['v1','v2','fc','nom'].forEach(i=>$(i).addEventListener('input',compute));
+compute();
+</script>
+</body>
+</html>
